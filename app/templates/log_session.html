@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Log Session{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Log a Study Session</h1>
+    <p class="page-subtitle">Record your session data to receive a risk assessment</p>
+</div>
+
+<div class="form-card">
+    <form id="sessionForm" class="session-form">
+        <input type="hidden" id="formStudentId" value="{{ student.id }}">
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="anxietyLevel">Anxiety Level <span class="range-label">(0–21)</span></label>
+                <input type="number" id="anxietyLevel" name="anxiety_level" min="0" max="21" value="5" required>
+                <div class="range-slider">
+                    <input type="range" id="anxietySlider" min="0" max="21" value="5">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="sleepQuality">Sleep Quality <span class="range-label">(0–5, 5=best)</span></label>
+                <input type="number" id="sleepQuality" name="sleep_quality" min="0" max="5" value="3" required>
+                <div class="range-slider">
+                    <input type="range" id="sleepSlider" min="0" max="5" value="3">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="studyLoad">Study Load <span class="range-label">(0–5, 5=heaviest)</span></label>
+                <input type="number" id="studyLoad" name="study_load" min="0" max="5" value="3" required>
+                <div class="range-slider">
+                    <input type="range" id="studySlider" min="0" max="5" value="3">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="durationMin">Session Duration <span class="range-label">(minutes)</span></label>
+                <input type="number" id="durationMin" name="duration_min" min="1" max="600" value="45" required>
+            </div>
+
+            <div class="form-group">
+                <label for="typingSpeed">Typing Speed <span class="range-label">(WPM)</span></label>
+                <input type="number" id="typingSpeed" name="typing_speed" min="0" max="200" value="60" required>
+            </div>
+
+            <div class="form-group">
+                <label for="breakCount">Number of Breaks</label>
+                <input type="number" id="breakCount" name="break_count" min="0" max="50" value="2" required>
+            </div>
+
+            <div class="form-group">
+                <label for="selfEsteem">Self Esteem <span class="range-label">(0–30)</span></label>
+                <input type="number" id="selfEsteem" name="self_esteem" min="0" max="30" value="15" required>
+                <div class="range-slider">
+                    <input type="range" id="esteemSlider" min="0" max="30" value="15">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="headache">Headache Frequency <span class="range-label">(0–5)</span></label>
+                <input type="number" id="headache" name="headache" min="0" max="5" value="1" required>
+                <div class="range-slider">
+                    <input type="range" id="headacheSlider" min="0" max="5" value="1">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submitSession">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Submit Session
+            </button>
+        </div>
+    </form>
+
+    <!-- Result Card (hidden initially) -->
+    <div class="result-card hidden" id="resultCard">
+        <h3>Prediction Result</h3>
+        <div class="result-body">
+            <div class="result-label" id="resultLabel">—</div>
+            <div class="result-score" id="resultScore">Confidence: —</div>
+        </div>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">View Dashboard</a>
+    </div>
+</div>
+{% endblock %}

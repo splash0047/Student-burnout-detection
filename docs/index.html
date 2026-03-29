@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BurnoutGuard — Student Burnout Detection Dashboard (GitHub Pages)">
+    <title>BurnoutGuard — Live Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --brand: #6C3FEB;
+            --brand-light: #EDE8FD;
+            --teal: #1D9E75;
+            --teal-light: #E1F5EE;
+            --amber: #BA7517;
+            --amber-light: #FAEEDA;
+            --red: #A32D2D;
+            --red-light: #FCEBEB;
+            --surface: #F1EFE8;
+            --card: #FFFFFF;
+            --ink: #2C2C2A;
+            --muted: #73726C;
+            --border: rgba(44, 44, 42, 0.12);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--surface);
+            color: var(--ink);
+            padding: 32px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .mono {
+            font-family: 'DM Mono', monospace;
+            font-weight: 500;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .risk-card {
+            border-left: 5px solid var(--muted);
+        }
+
+        .risk-card.low {
+            border-left-color: var(--teal);
+        }
+
+        .risk-card.medium {
+            border-left-color: var(--amber);
+        }
+
+        .risk-card.high {
+            border-left-color: var(--red);
+        }
+
+        .risk-label {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .low .risk-label {
+            color: var(--teal);
+        }
+
+        .medium .risk-label {
+            color: var(--amber);
+        }
+
+        .high .risk-label {
+            color: var(--red);
+        }
+
+        .meta {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .config-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .config-bar input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.85rem;
+            width: 360px;
+        }
+
+        .config-bar button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--brand);
+            color: #fff;
+            font-family: 'Outfit';
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .config-bar button:hover {
+            background: #5530C5;
+        }
+
+        .error {
+            color: var(--red);
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧠 BurnoutGuard</h1>
+    <p class="subtitle">Static dashboard — connects to your deployed API</p>
+
+    <div class="config-bar">
+        <input type="text" id="apiBase" placeholder="https://YOUR-RENDER-URL.onrender.com" value="">
+        <input type="text" id="studentId" placeholder="Student ID" value="">
+        <button onclick="loadData()">Load</button>
+    </div>
+    <p class="error" id="error"></p>
+
+    <div class="card risk-card" id="riskCard">
+        <small
+            style="color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;">Current
+            Risk Level</small>
+        <div class="risk-label" id="riskLabel">—</div>
+        <div class="meta" id="riskMeta">Enter your API URL and Student ID above, then click Load.</div>
+    </div>
+
+    <div class="card">
+        <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 16px;">Risk Trend</h3>
+        <canvas id="trendChart" height="240"></canvas>
+    </div>
+
+    <script>
+        const API_BASE = '';  // Replace with your Render URL
+
+        async function loadData() {
+            const base = document.getElementById('apiBase').value.replace(/\/+$/, '');
+            const sid = document.getElementById('studentId').value.trim();
+            const errEl = document.getElementById('error');
+            errEl.textContent = '';
+
+            if (!base || !sid) { errEl.textContent = 'Please enter both API URL and Student ID.'; return; }
+
+            try {
+                // Fetch prediction
+                const predRes = await fetch(`${base}/api/predict/${sid}`);
+                if (!predRes.ok) throw new Error(`Prediction: ${predRes.status}`);
+                const pred = await predRes.json();
+
+                const riskCard = document.getElementById('riskCard');
+                const riskLabel = document.getElementById('riskLabel');
+                const riskMeta = document.getElementById('riskMeta');
+                riskCard.className = `card risk-card ${pred.label.toLowerCase()}`;
+                riskLabel.textContent = pred.label;
+                riskMeta.textContent = `Confidence: ${(pred.score * 100).toFixed(0)}%`;
+
+                // Fetch history
+                const histRes = await fetch(`${base}/api/history/${sid}`);
+                const hist = await histRes.json();
+                renderChart(hist);
+            } catch (e) {
+                errEl.textContent = `Error: ${e.message}`;
+            }
+        }
+
+        function renderChart(predictions) {
+            const canvas = document.getElementById('trendChart');
+            if (!predictions.length) return;
+            const labels = predictions.map(p => new Date(p.predicted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+            const scores = predictions.map(p => p.risk_score);
+            const colors = predictions.map(p => p.risk_label === 'HIGH' ? '#A32D2D' : p.risk_label === 'MEDIUM' ? '#BA7517' : '#1D9E75');
+
+            new Chart(canvas, {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'Risk Score', data: scores, borderColor: '#6C3FEB', backgroundColor: 'rgba(108,63,235,0.08)', pointBackgroundColor: colors, pointRadius: 5, borderWidth: 2, tension: 0.35, fill: true }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 1, ticks: { callback: v => `${(v * 100).toFixed(0)}%` } }, x: { grid: { display: false } } } }
+            });
+        }
+    </script>
+</body>
+
+</html>

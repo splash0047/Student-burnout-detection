@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Alert Banner for HIGH risk -->
+<div class="alert-banner alert-high {% if not prediction or prediction.risk_label != 'HIGH' %}hidden{% endif %}"
+    id="alertBanner">
+    <div class="alert-content">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        <span>Your burnout risk is <strong>HIGH</strong>. Consider taking a break and reaching out to a
+            counsellor.</span>
+    </div>
+    <button class="alert-dismiss" id="dismissAlert" aria-label="Dismiss alert">&times;</button>
+</div>
+
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p class="page-subtitle">Your wellness overview for today</p>
+</div>
+
+<!-- Risk Card -->
+<div class="risk-card risk-{{ prediction.risk_label|lower if prediction else 'low' }}" id="riskCard">
+    <div class="risk-card-body">
+        <div class="risk-info">
+            <span class="risk-label-tag">Current Risk Level</span>
+            <h2 class="risk-label" id="riskLabel">{{ prediction.risk_label if prediction else 'NO DATA' }}</h2>
+            <div class="risk-meta">
+                <span class="risk-score" id="riskScore">
+                    Confidence: <span class="mono">{{ '%.0f'|format(prediction.risk_score * 100) if prediction else '—'
+                        }}%</span>
+                </span>
+                <span class="risk-time" id="riskTime">
+                    {% if prediction and prediction.predicted_at %}
+                    Updated {{ prediction.predicted_at.strftime('%H:%M') }}
+                    {% else %}
+                    No predictions yet
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <a href="{{ url_for('main.log_session') }}" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Log New Session
+        </a>
+    </div>
+</div>
+
+<!-- Metric Tiles -->
+<div class="metric-tiles">
+    <div class="metric-tile">
+        <div class="metric-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20V10" />
+                <path d="M18 20V4" />
+                <path d="M6 20v-4" />
+            </svg>
+        </div>
+        <div class="metric-info">
+            <span class="metric-value mono" id="metricTyping">{{ avg_typing }}</span>
+            <span class="metric-label">Avg Typing Speed</span>
+        </div>
+    </div>
+    <div class="metric-tile">
+        <div class="metric-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </svg>
+        </div>
+        <div class="metric-info">
+            <span class="metric-value mono" id="metricDuration">{{ last_duration }} min</span>
+            <span class="metric-label">Last Session Duration</span>
+        </div>
+    </div>
+    <div class="metric-tile">
+        <div class="metric-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 01-3.46 0" />
+            </svg>
+        </div>
+        <div class="metric-info">
+            <span class="metric-value mono" id="metricBreaks">{{ break_count_today }}</span>
+            <span class="metric-label">Breaks Today</span>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Chart -->
+<div class="chart-card">
+    <div class="chart-header">
+        <h3>Risk Trend — Last 14 Days</h3>
+    </div>
+    <div class="chart-body">
+        <canvas id="riskChart" height="260"></canvas>
+    </div>
+</div>
+{% endblock %}
