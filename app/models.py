@@ -2,24 +2,38 @@
 
 import uuid
 from datetime import datetime, timezone
+from flask_login import UserMixin
 from app import db
 
 
-class Student(db.Model):
-    """Registered student."""
+class Student(UserMixin, db.Model):
+    """Registered student with login capability."""
     __tablename__ = "students"
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     sessions = db.relationship("Session", backref="student", lazy=True)
     predictions = db.relationship("Prediction", backref="student", lazy=True)
 
+    def set_password(self, password: str, bcrypt):
+        self.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+
+    def check_password(self, password: str, bcrypt) -> bool:
+        return bcrypt.check_password_hash(self.password_hash, password)
+
+    # Flask-Login requires get_id() to return a string
+    def get_id(self):
+        return str(self.id)
+
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
+            "email": self.email,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 

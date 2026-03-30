@@ -42,14 +42,38 @@
                 </span>
             </div>
         </div>
-        <a href="{{ url_for('main.log_session') }}" class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Log New Session
-        </a>
+        <div class="risk-card-actions">
+            <button class="btn btn-secondary btn-sm" id="whyBtn" onclick="toggleExplanation()"
+                title="Explain this prediction">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                Why?
+            </button>
+            <a href="{{ url_for('main.log_session') }}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Log Session
+            </a>
+        </div>
     </div>
+</div>
+
+<!-- SHAP Explanation Panel -->
+<div class="shap-panel hidden" id="shapPanel">
+    <div class="shap-header">
+        <h3>What's driving your risk score?</h3>
+        <p class="shap-sub">Bars show each factor's contribution to your current prediction. Positive = increases risk,
+            Negative = reduces risk.</p>
+    </div>
+    <div class="shap-chart-wrap">
+        <canvas id="shapChart" height="220"></canvas>
+    </div>
+    <p class="shap-loading hidden" id="shapLoading">Computing explanation…</p>
 </div>
 
 <!-- Metric Tiles -->

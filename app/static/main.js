@@ -252,6 +252,113 @@
             .join("");
     }
 
+    // ── SHAP Explainability ─────────────────────────────────
+    let shapChartInstance = null;
+    let explanationFetched = false;
+
+    window.toggleExplanation = async function () {
+        const panel = document.getElementById("shapPanel");
+        const wrap = document.querySelector(".shap-chart-wrap");
+        const loader = document.getElementById("shapLoading");
+
+        if (!panel) return;
+
+        if (panel.classList.contains("hidden")) {
+            panel.classList.remove("hidden");
+            // Fetch if not already fetched
+            if (!explanationFetched) {
+                wrap.classList.add("hidden");
+                loader.classList.remove("hidden");
+                await fetchExplanation();
+                loader.classList.add("hidden");
+                wrap.classList.remove("hidden");
+            }
+        } else {
+            panel.classList.add("hidden");
+        }
+    };
+
+    async function fetchExplanation() {
+        if (!STUDENT_ID) return;
+        try {
+            const res = await fetch(`/api/explain/${STUDENT_ID}`);
+            const data = await res.json();
+
+            if (data.error) {
+                console.error("SHAP error:", data.error);
+                return;
+            }
+
+            explanationFetched = true;
+            renderShapChart(data);
+        } catch (err) {
+            console.error("Explanation fetch error:", err);
+        }
+    }
+
+    function renderShapChart(data) {
+        const canvas = document.getElementById("shapChart");
+        if (!canvas || typeof Chart === "undefined") return;
+
+        // data is sorted by absolute impact: [{"feature", "label", "value", "shap_value"}]
+        // We only show top 5
+        const top5 = data.slice(0, 5);
+
+        // Chart.js horizontal bar charts put the first item at the bottom of the axis by default
+        // So we reverse the arrays to keep highest impact at the top
+        const labels = top5.map(d => `${d.label} [${d.value}]`).reverse();
+        const shapValues = top5.map(d => d.shap_value).reverse();
+
+        // Color coding: Positive SHAP (increases risk) = Red, Negative (decreases risk) = Teal
+        const bgColors = shapValues.map(v => v > 0 ? "rgba(163, 45, 45, 0.85)" : "rgba(29, 158, 117, 0.85)");
+
+        if (shapChartInstance) shapChartInstance.destroy();
+
+        shapChartInstance = new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Contribution to Risk",
+                    data: shapValues,
+                    backgroundColor: bgColors,
+                    borderRadius: 4,
+                    barPercentage: 0.6,
+                }],
+            },
+            options: {
+                indexAxis: 'y', // Horizontal bar chart
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "#2C2C2A",
+                        titleFont: { family: "'Outfit'" },
+                        bodyFont: { family: "'DM Mono'" },
+                        callbacks: {
+                            label: (ctx) => {
+                                const val = ctx.raw;
+                                const sign = val > 0 ? "+" : "";
+                                return `Impact: ${sign}${val.toFixed(3)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: "rgba(44,44,42,0.06)" },
+                        ticks: { font: { family: "'DM Mono'", size: 10 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { family: "'Outfit'", size: 12, weight: 500 }, color: "#2C2C2A" }
+                    }
+                }
+            }
+        });
+    }
+
     // ── Init ────────────────────────────────────────────────
     document.addEventListener("DOMContentLoaded", () => {
         // Dashboard page
@@ -266,3 +373,4 @@
         }
     });
 })();
+

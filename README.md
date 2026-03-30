@@ -1,4 +1,4 @@
-# BurnoutGuard — Student Burnout Detection System
+<!-- # BurnoutGuard — Student Burnout Detection System -->
 
 Detect early signs of student burnout using behavioural data (typing speed, study duration, break frequency) and machine learning. Provides a **LOW / MEDIUM / HIGH** risk score before burnout peaks.
 
