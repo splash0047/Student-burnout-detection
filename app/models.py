@@ -29,6 +29,9 @@ class Student(UserMixin, db.Model):
     def get_id(self):
         return str(self.id)
 
+    def __repr__(self):
+        return f"<Student {self.email}>"
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -51,6 +54,9 @@ class Session(db.Model):
     anxiety_level = db.Column(db.Integer, nullable=False, default=0)
     sleep_quality = db.Column(db.Integer, nullable=False, default=0)
     study_load = db.Column(db.Integer, nullable=False, default=0)
+
+    def __repr__(self):
+        return f"<Session {self.id} for Student {self.student_id}>"
 
     def to_dict(self):
         return {
@@ -79,6 +85,9 @@ class Baseline(db.Model):
 
     student = db.relationship("Student", backref=db.backref("baseline", uselist=False))
 
+    def __repr__(self):
+        return f"<Baseline for Student {self.student_id}>"
+
     def to_dict(self):
         return {
             "student_id": self.student_id,
@@ -99,6 +108,9 @@ class Prediction(db.Model):
     risk_label = db.Column(db.String(10), nullable=False)
     risk_score = db.Column(db.Float, nullable=False)
     predicted_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f"<Prediction {self.id}: {self.risk_label} for Student {self.student_id}>"
 
     def to_dict(self):
         return {
